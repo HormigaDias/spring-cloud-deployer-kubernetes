@@ -357,6 +357,26 @@ public class KubernetesDeployerProperties {
 		}
 	}
 
+	public static class SecurityContext {
+		private Long runAsUser;
+
+		private Boolean allowPrivilegeEscalation;
+
+		public void setRunAsUser(Long runAsUser) {
+			this.runAsUser = runAsUser;
+		}
+
+		public Long getRunAsUser() {
+			return this.runAsUser;
+		}
+
+		public void setAllowPrivilegeEscalation(Boolean allowPrivilegeEscalation) {
+			this.allowPrivilegeEscalation = allowPrivilegeEscalation;
+		}
+
+		public Boolean getAllowPrivilegeEscalation() { return this.allowPrivilegeEscalation; }
+	}
+
 	public static class Lifecycle {
 		private Hook postStart;
 		private Hook preStop;
@@ -759,6 +779,11 @@ public class KubernetesDeployerProperties {
 	 * The security context to apply to created pod's.
 	 */
 	private PodSecurityContext podSecurityContext;
+
+	/**
+	 * The security context to apply to created container's.
+	 */
+	private SecurityContext containerSecurityContext;
 
 	/**
 	 * The node affinity rules to apply.
@@ -1383,6 +1408,14 @@ public class KubernetesDeployerProperties {
 
 	public PodSecurityContext getPodSecurityContext() {
 		return podSecurityContext;
+	}
+
+	public void setContainerSecurityContext(SecurityContext containerSecurityContext) {
+		this.containerSecurityContext = containerSecurityContext;
+	}
+
+	public SecurityContext getContainerSecurityContext() {
+		return containerSecurityContext;
 	}
 
 	public NodeAffinity getNodeAffinity() {

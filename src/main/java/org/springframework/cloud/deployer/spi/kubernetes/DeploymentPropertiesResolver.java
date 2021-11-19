@@ -41,6 +41,8 @@ import io.fabric8.kubernetes.api.model.PodSecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.SecretEnvSource;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -441,6 +443,27 @@ class DeploymentPropertiesResolver {
 		return podSecurityContext;
 	}
 
+	SecurityContext getContainerSecurityContext(Map<String, String> kubernetesDeployerProperties) {
+		SecurityContext containerSecurityContext = null;
+
+		KubernetesDeployerProperties deployerProperties = bindProperties(kubernetesDeployerProperties,
+																		 this.propertyPrefix + ".containerSecurityContext",
+																		 "containerSecurityContext");
+
+		if (deployerProperties.getContainerSecurityContext() != null) {
+			containerSecurityContext = new SecurityContextBuilder()
+				.withRunAsUser(deployerProperties.getContainerSecurityContext().getRunAsUser())
+				.withAllowPrivilegeEscalation(deployerProperties.getContainerSecurityContext().getAllowPrivilegeEscalation())
+				.build();
+		} else if (this.properties.getContainerSecurityContext() != null ) {
+			containerSecurityContext = new SecurityContextBuilder()
+				.withRunAsUser(this.properties.getContainerSecurityContext().getRunAsUser())
+				.withAllowPrivilegeEscalation(this.properties.getContainerSecurityContext().getAllowPrivilegeEscalation())
+				.build();
+		}
+		return containerSecurityContext;
+	}
+
 	Affinity getAffinityRules(Map<String, String> kubernetesDeployerProperties) {
 		Affinity affinity = new Affinity();
 
@@ -523,6 +546,7 @@ class DeploymentPropertiesResolver {
 						.withImage(imageName)
 						.withCommand(commands)
 						.withEnv(toEnvironmentVariables((envString != null)? envString.split(","): new String[0]))
+						.withSecurityContext(getContainerSecurityContext(kubernetesDeployerProperties))
 						.addAllToVolumeMounts(vms)
 						.build();
 			}
@@ -536,6 +560,7 @@ class DeploymentPropertiesResolver {
 						.withImage(initContainer.getImageName())
 						.withCommand(initContainer.getCommands())
 						.withEnv(toEnvironmentVariables(initContainer.getEnvironmentVariables()))
+						.withSecurityContext(getContainerSecurityContext(kubernetesDeployerProperties))
 						.addAllToVolumeMounts(Optional.ofNullable(initContainer.getVolumeMounts()).orElse(Collections.emptyList()))
 						.build();
 			}
