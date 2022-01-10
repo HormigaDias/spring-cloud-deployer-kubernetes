@@ -289,6 +289,28 @@ public class KubernetesDeployerProperties {
 		}
 	}
 
+	static class FieldPathRef {
+		private String envVarName;
+
+		private String fieldPath;
+
+		public void setEnvVarName(String envVarName) {
+			this.envVarName = envVarName;
+		}
+
+		public String getEnvVarName() {
+			return envVarName;
+		}
+
+		public void setFieldPath(String fieldPath) {
+			this.fieldPath = fieldPath;
+		}
+
+		public String getFieldPath() {
+			return fieldPath;
+		}
+	}
+
 	static class KeyRef {
 		private String envVarName;
 
@@ -655,6 +677,11 @@ public class KubernetesDeployerProperties {
 	 * Tolerations to allocate for a Pod.
 	 */
 	private List<Toleration> tolerations = new ArrayList<>();
+
+	/**
+	 * Field path references to be added to the Pod environment.
+	 */
+	private List<FieldPathRef> fieldPathRefs = new ArrayList<>();
 
 	/**
 	 * Secret key references to be added to the Pod environment.
@@ -1216,6 +1243,14 @@ public class KubernetesDeployerProperties {
 
 	public void setTolerations(List<Toleration> tolerations) {
 		this.tolerations = tolerations;
+	}
+
+	public List<FieldPathRef> getFieldPathRefs() {
+		return fieldPathRefs;
+	}
+
+	public void setFieldPathRefs(List<FieldPathRef> fieldPathRefs) {
+		this.fieldPathRefs = fieldPathRefs;
 	}
 
 	public List<SecretKeyRef> getSecretKeyRefs() {

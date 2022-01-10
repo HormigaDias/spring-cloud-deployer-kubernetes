@@ -36,6 +36,7 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
+import io.fabric8.kubernetes.api.model.ObjectFieldSelector;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.PodSecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -55,6 +56,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.cloud.deployer.spi.kubernetes.KubernetesDeployerProperties.ConfigMapKeyRef;
+import org.springframework.cloud.deployer.spi.kubernetes.KubernetesDeployerProperties.FieldPathRef;
 import org.springframework.cloud.deployer.spi.kubernetes.KubernetesDeployerProperties.InitContainer;
 import org.springframework.cloud.deployer.spi.kubernetes.KubernetesDeployerProperties.SecretKeyRef;
 import org.springframework.cloud.deployer.spi.kubernetes.support.PropertyParserUtils;
@@ -985,6 +987,38 @@ class DeploymentPropertiesResolver {
 		configMapKeyEnvRefVar.setName(configMapKeyRef.getEnvVarName());
 
 		return configMapKeyEnvRefVar;
+	}
+
+	List<EnvVar> getFieldPathRefs(Map<String, String> deploymentProperties) {
+		List<EnvVar>fieldPathRefs = new ArrayList<>();
+
+		KubernetesDeployerProperties deployerProperties = bindProperties(deploymentProperties,
+																		 this.propertyPrefix + ".fieldPathRefs", "fieldPathRefs" );
+
+		deployerProperties.getFieldPathRefs().forEach(fieldPathRef ->
+														  fieldPathRefs.add(buildFieldPathRefEnvVar(fieldPathRef)));
+
+		properties.getFieldPathRefs().stream()
+				  .filter(fieldPathRef -> fieldPathRefs.stream()
+													   .noneMatch(existing -> existing.getName().equals(fieldPathRef.getEnvVarName())))
+				  .collect(Collectors.toList())
+				  .forEach(fieldPathRef -> fieldPathRefs.add(buildFieldPathRefEnvVar(fieldPathRef)));
+
+		return fieldPathRefs;
+	}
+
+	private EnvVar buildFieldPathRefEnvVar(FieldPathRef fieldPathRef) {
+		ObjectFieldSelector objectFieldSelector = new ObjectFieldSelector();
+		objectFieldSelector.setFieldPath(fieldPathRef.getFieldPath());
+
+		EnvVarSource envVarSource = new EnvVarSource();
+		envVarSource.setFieldRef(objectFieldSelector);
+
+		EnvVar fieldPathEnvRefVar = new EnvVar();
+		fieldPathEnvRefVar.setValueFrom(envVarSource);
+		fieldPathEnvRefVar.setName(fieldPathRef.getEnvVarName());
+
+		return fieldPathEnvRefVar;
 	}
 
 	List<EnvVar> getSecretKeyRefs(Map<String, String> deploymentProperties) {

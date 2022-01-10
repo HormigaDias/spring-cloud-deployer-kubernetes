@@ -145,6 +145,7 @@ public class DefaultContainerFactory implements ContainerFactory {
 			envVars.add(new EnvVar(e.getKey(), e.getValue(), null));
 		}
 
+		envVars.addAll(deploymentPropertiesResolver.getFieldPathRefs(deploymentProperties));
 		envVars.addAll(deploymentPropertiesResolver.getSecretKeyRefs(deploymentProperties));
 		envVars.addAll(deploymentPropertiesResolver.getConfigMapKeyRefs(deploymentProperties));
 		envVars.add(getGUIDEnvVar());
